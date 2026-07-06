@@ -41,7 +41,7 @@ export async function initRepeatMacros() {
             }) => {
 
                 const
-                    doAfter = parseValue(resolveAfter) == true // TODO: Implement allowing empty strings.
+                    doAfter = parseValue(resolveAfter) == true
                         ? true
                         : false,
                     doN = parseValue(nRepeat);
