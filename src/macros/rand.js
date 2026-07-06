@@ -34,8 +34,9 @@ export async function initRandMacros() {
                     return 'NaN';
                 }
 
-                min = Math.ceil(rawMin);
-                max = Math.floor(rawMax);
+                const
+                    min = Math.ceil(rawMin),
+                    max = Math.floor(rawMax);
 
                 return Math.floor(Math.random() * (max - min + 1)) + min;
             }
@@ -71,18 +72,23 @@ export async function initRandMacros() {
             ],
             description: 'Generate a random float between two numbers.',
             returns: 'The randomly generated number.',
-            handler: ({unnamedArgs: [rawMin, rawMax, precision, uniform]}) => {
-                min = Number(rawMin);
-                max = Number(rawMax);
+            handler: ({unnamedArgs: [rawMin, rawMax, rawPrecision, uniform]}) => {
+                const
+                    min = Number(rawMin),
+                    max = Number(rawMax);
 
-                if (Number.isNaN(min) || Number.isNaN(max)) {
+                const precision = rawPrecision
+                    ? Number(rawPrecision)
+                    : undefined;
+
+                if (Number.isNaN(min) || Number.isNaN(max) || (precision && Number.isNaN(precision))) {
                     return 'NaN';
                 }
 
                 if (precision && uniform) {
                     return (Math.floor(((Math.random() * (max - min + 1)) * Math.pow(10, precision))) / Math.pow(10, precision)) + min;
                 } else if (precision) {
-                    return (Math.random() * (max - min) + min).toFixed(parseValue(precision));
+                    return (Math.random() * (max - min) + min).toFixed(precision);
                 } else {
                     return Math.random() * (max - min) + min;
                 }
