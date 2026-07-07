@@ -1,7 +1,7 @@
 // @ts-nocheck
-const { macros } = await import(/* webpackIgnore: True */'/scripts/macros/macro-system.js');
+const { macros } = await import(/* webpackIgnore: true */'/scripts/macros/macro-system.js');
 
-const { parseValue } = await import(/* webpackIgnore: True */'/scripts/extensions/third-party/STLibs-Nox-Library/scripts/parsing.js')
+const { parseValue } = await import(/* webpackIgnore: true */'/scripts/extensions/third-party/STLibs-Nox-Library/scripts/parsing.js')
 
 export async function initRepeatMacros() {
     macros.register(
