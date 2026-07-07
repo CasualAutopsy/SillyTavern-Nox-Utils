@@ -85,7 +85,7 @@ export async function initRandMacros() {
                     return 'NaN';
                 }
 
-                if (precision && uniform) {
+                if (precision && parseValue(uniform) == true) {
                     return (Math.floor(((Math.random() * (max - min + 1)) * Math.pow(10, precision))) / Math.pow(10, precision)) + min;
                 } else if (precision) {
                     return (Math.random() * (max - min) + min).toFixed(precision);
