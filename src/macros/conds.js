@@ -1,7 +1,8 @@
 // @ts-nocheck
 const { macros } = await import(/* webpackIgnore: true */'/scripts/macros/macro-system.js');
 
-const { parseValue } = await import(/* webpackIgnore: true */'/scripts/extensions/third-party/STLibs-Nox-Library/scripts/parsing.js')
+const { parseValue } = await import(/* webpackIgnore: true */'/scripts/extensions/third-party/STLibs-Nox-Library/scripts/parsing.js');
+const { parseMacroValueOrVar, parseMacroNumberOrVar } = await import(/* webpackIgnore: true */'/scripts/extensions/third-party/STLibs-Nox-Library/scripts/macro-parsing.js');
 
 const condTypes = [
     'condEq', 'condNeq',
@@ -74,24 +75,22 @@ export async function initCondMacros() {
             delayArgResolution: true,
             handler: ({unnamedArgs: [rawStrictTypes, rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
 
-                let left = rawLeft;
-                let right = rawRight;
-
-                left = parseValue(resolve(left));
-                right = parseValue(resolve(right));
+                let
+                    left = parseMacroValueOrVar(rawLeft, resolve),
+                    right = parseMacroValueOrVar(rawRight, resolve);
 
                 const { thenBranch, elseBranch } = splitOnTopLevelElse(rawContent);
 
 
-                let chosenBranch = undefined;
+                let chosenBranch;
                 let strictTypes = rawStrictTypes !== ''
-                    ? parseValue(rawStrictTypes)
+                    ? parseMacroValueOrVar(rawStrictTypes, resolve)
                     : true;
 
                 if (strictTypes == true) {
-                    chosenBranch = parseValue(left) === parseValue(right) ? thenBranch : elseBranch;
+                    chosenBranch = left === right ? thenBranch : elseBranch;
                 } else {
-                    chosenBranch = parseValue(left) == parseValue(right) ? thenBranch : elseBranch;
+                    chosenBranch = left == right ? thenBranch : elseBranch;
                 }
 
                 if (chosenBranch === undefined) {
@@ -139,24 +138,22 @@ export async function initCondMacros() {
             delayArgResolution: true,
             handler: ({unnamedArgs: [rawStrictTypes, rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
 
-                let left = rawLeft;
-                let right = rawRight;
-
-                left = parseValue(resolve(left));
-                right = parseValue(resolve(right));
+                let
+                    left = parseMacroValueOrVar(rawLeft, resolve),
+                    right = parseMacroValueOrVar(rawRight, resolve);
 
                 const { thenBranch, elseBranch } = splitOnTopLevelElse(rawContent);
 
 
-                let chosenBranch = undefined;
+                let chosenBranch;
                 let strictTypes = rawStrictTypes !== ''
-                    ? parseValue(rawStrictTypes)
+                    ? parseMacroValueOrVar(rawStrictTypes, resolve)
                     : true;
 
                 if (strictTypes == true) {
-                    chosenBranch = parseValue(left) !== parseValue(right) ? thenBranch : elseBranch;
+                    chosenBranch = left !== right ? thenBranch : elseBranch;
                 } else {
-                    chosenBranch = parseValue(left) != parseValue(right) ? thenBranch : elseBranch;
+                    chosenBranch = left != right ? thenBranch : elseBranch;
                 }
 
                 if (chosenBranch === undefined) {
@@ -200,14 +197,12 @@ export async function initCondMacros() {
             delayArgResolution: true,
             handler: ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
 
-                let left = rawLeft;
-                let right = rawRight;
-
-                left = Number(resolve(left));
-                right = Number(resolve(right));
+                let
+                    left = parseMacroNumberOrVar(rawLeft, resolve),
+                    right = parseMacroNumberOrVar(rawRight, resolve);
 
                 if (Number.isNaN(left) || Number.isNaN(right)) {
-                    return '';
+                    return 'NaN';
                 }
 
                 const { thenBranch, elseBranch } = splitOnTopLevelElse(rawContent);
@@ -256,14 +251,12 @@ export async function initCondMacros() {
             delayArgResolution: true,
             handler: ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
 
-                let left = rawLeft;
-                let right = rawRight;
-
-                left = Number(resolve(left));
-                right = Number(resolve(right));
+                let
+                    left = parseMacroNumberOrVar(rawLeft, resolve),
+                    right = parseMacroNumberOrVar(rawRight, resolve);
 
                 if (Number.isNaN(left) || Number.isNaN(right)) {
-                    return '';
+                    return 'NaN';
                 }
 
                 const { thenBranch, elseBranch } = splitOnTopLevelElse(rawContent);
@@ -312,14 +305,12 @@ export async function initCondMacros() {
             delayArgResolution: true,
             handler: ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
 
-                let left = rawLeft;
-                let right = rawRight;
-
-                left = Number(resolve(left));
-                right = Number(resolve(right));
+                let
+                    left = parseMacroNumberOrVar(rawLeft, resolve),
+                    right = parseMacroNumberOrVar(rawRight, resolve);
 
                 if (Number.isNaN(left) || Number.isNaN(right)) {
-                    return '';
+                    return 'NaN';
                 }
 
                 const { thenBranch, elseBranch } = splitOnTopLevelElse(rawContent);
@@ -368,14 +359,12 @@ export async function initCondMacros() {
             delayArgResolution: true,
             handler: ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
 
-                let left = rawLeft;
-                let right = rawRight;
-
-                left = Number(resolve(left));
-                right = Number(resolve(right));
+                let
+                    left = parseMacroNumberOrVar(rawLeft, resolve),
+                    right = parseMacroNumberOrVar(rawRight, resolve);
 
                 if (Number.isNaN(left) || Number.isNaN(right)) {
-                    return '';
+                    return 'NaN';
                 }
 
                 const { thenBranch, elseBranch } = splitOnTopLevelElse(rawContent);

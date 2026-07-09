@@ -1,7 +1,7 @@
 // @ts-nocheck
 const { macros } = await import(/* webpackIgnore: true */'/scripts/macros/macro-system.js');
 
-const { parseMacroNumberOrVar } = await import(/* webpackIgnore: true */'/scripts/extensions/third-party/STLibs-Nox-Library/scripts/macro-parsing.js')
+const { parseMacroNumberOrVar } = await import(/* webpackIgnore: true */'/scripts/extensions/third-party/STLibs-Nox-Library/scripts/macro-parsing.js');
 
 /**
  * Initialize the math ops macros
@@ -19,6 +19,7 @@ export async function initMathMacros() {
             },
             description: 'Add a list of numbers together.',
             returns: 'The resulting number.',
+            returnType: 'number',
             handler: ({list: numList, resolve}) => {
                 let num = 0;
 
@@ -43,6 +44,7 @@ export async function initMathMacros() {
             },
             description: 'Subtract a list of numbers from the first item in the list.',
             returns: 'The resulting number.',
+            returnType: 'number',
             handler: ({list: [subtractee, ...subList], resolve}) => {
                 let num = parseMacroNumberOrVar(subtractee, resolve);
 
@@ -67,6 +69,7 @@ export async function initMathMacros() {
             },
             description: 'Multiply a list of numbers together.',
             returns: 'The resulting number.',
+            returnType: 'number',
             handler: ({list: numList, resolve}) => {
                 let num = 1;
 
@@ -91,6 +94,7 @@ export async function initMathMacros() {
             },
             description: 'Divide a list of numbers by the first item in the list.',
             returns: 'The resulting number.',
+            returnType: 'number',
             handler: ({list: [dividend, ...divList], resolve}) => {
                 let num = parseMacroNumberOrVar(dividend, resolve);
 
@@ -115,6 +119,7 @@ export async function initMathMacros() {
             },
             description: 'Perform a maximum operation on a list of numbers.',
             returns: 'The resulting number.',
+            returnType: 'number',
             handler: ({list: numList, resolve}) => {
                 return Math.max(...numList.map((val) => parseMacroNumberOrVar(val, resolve)));
             }
@@ -133,6 +138,7 @@ export async function initMathMacros() {
             },
             description: 'Perform a minimum operation on a list of numbers.',
             returns: 'The resulting number.',
+            returnType: 'number',
             handler: ({list: numList, resolve}) => {
                 return Math.min(...numList.map((val) => parseMacroNumberOrVar(val, resolve)));
             }
@@ -158,6 +164,7 @@ export async function initMathMacros() {
             ],
             description: 'Perform a power operation on a number.',
             returns: 'The resulting number.',
+            returnType: 'number',
             handler: ({unnamedArgs: [base, exponent], resolve}) => {
                 return Math.pow(parseMacroNumberOrVar(base, resolve), parseMacroNumberOrVar(exponent, resolve));
             }
@@ -183,6 +190,7 @@ export async function initMathMacros() {
             ],
             description: 'Perform a modulo operation on two values.',
             returns: 'The resulting number.',
+            returnType: 'number',
             handler: ({unnamedArgs: [dividend, divisor], resolve}) => {
                 return parseMacroNumberOrVar(dividend, resolve) % parseMacroNumberOrVar(divisor, resolve);
             }
@@ -204,6 +212,7 @@ export async function initMathMacros() {
             ],
             description: 'Perform a square root operation on a number.',
             returns: 'The resulting number.',
+            returnType: 'number',
             handler: ({unnamedArgs: [value], resolve}) => {
                 return Math.sqrt(parseMacroNumberOrVar(value, resolve));
             }
@@ -225,6 +234,7 @@ export async function initMathMacros() {
             ],
             description: 'Perform an absolute value operation on a number.',
             returns: 'The resulting number.',
+            returnType: 'number',
             handler: ({unnamedArgs: [value], resolve}) => {
                 return Math.abs(parseMacroNumberOrVar(value, resolve));
             }
@@ -246,6 +256,7 @@ export async function initMathMacros() {
             ],
             description: 'Perform a logarithm operation on a number.',
             returns: 'The resulting number.',
+            returnType: 'number',
             handler: ({unnamedArgs: [value], resolve}) => {
                 return Math.log(parseMacroNumberOrVar(value, resolve));
             }
@@ -267,6 +278,7 @@ export async function initMathMacros() {
             ],
             description: 'Perform a cosine operation on a number.',
             returns: 'The resulting number.',
+            returnType: 'number',
             handler: ({unnamedArgs: [value], resolve}) => {
                 return Math.cos(parseMacroNumberOrVar(value, resolve));
             }
@@ -288,6 +300,7 @@ export async function initMathMacros() {
             ],
             description: 'Perform a sine operation on a number.',
             returns: 'The resulting number.',
+            returnType: 'number',
             handler: ({unnamedArgs: [value], resolve}) => {
                 return Math.sin(parseMacroNumberOrVar(value, resolve));
             }
@@ -309,6 +322,7 @@ export async function initMathMacros() {
             ],
             description: 'Perform a tangent operation on a number.',
             returns: 'The resulting number.',
+            returnType: 'number',
             handler: ({unnamedArgs: [value], resolve}) => {
                 return Math.tan(parseMacroNumberOrVar(value, resolve));
             }
