@@ -1,7 +1,6 @@
-// @ts-nocheck
-const { macros } = await import(/* webpackIgnore: true */'/scripts/macros/macro-system.js');
+const { macros } = SillyTavern.getContext();
 
-const { parseMacroNumberOrVar } = await import(/* webpackIgnore: true */'/scripts/extensions/third-party/STLibs-Nox-Library/scripts/macro-parsing.js');
+const { shorthandFloatResolver } = NoxLib.MacroCoercionAndShorthand.VarShorthand
 
 /**
  * Initialize the math ops macros
@@ -13,21 +12,25 @@ export async function initMathMacros() {
     macros.register(
         'add',
         {
-            category: 'Nox Utils - Math Ops',
-            list: {
-                min: 2
+            "category": 'Nox Utils - Math Ops',
+            "list": {
+                "min": 2
             },
-            description: 'Add a list of numbers together.',
-            returns: 'The resulting number.',
-            returnType: 'number',
-            handler: ({list: numList, resolve}) => {
+            "description": 'Add a list of numbers together.',
+            "returns": 'The resulting number.',
+            "returnType": 'number',
+            "handler": ({list: values, resolve}) => {
                 let num = 0;
 
-                numList.forEach((val) => {
-                    num += parseMacroNumberOrVar(val, resolve);
+                values = values !== null
+                    ? values
+                    : [];
+
+                values.forEach((val) => {
+                    num += shorthandFloatResolver(val, resolve);
                 });
 
-                return num;
+                return String(num);
             }
         }
     );
@@ -38,21 +41,35 @@ export async function initMathMacros() {
     macros.register(
         'sub',
         {
-            category: 'Nox Utils - Math Ops',
-            list: {
-                min: 2
+            "category": 'Nox Utils - Math Ops',
+            "list": {
+                "min": 2
             },
-            description: 'Subtract a list of numbers from the first item in the list.',
-            returns: 'The resulting number.',
-            returnType: 'number',
-            handler: ({list: [subtractee, ...subList], resolve}) => {
-                let num = parseMacroNumberOrVar(subtractee, resolve);
+            "description": 'Subtract a list of numbers from the first item in the list.',
+            "returns": 'The resulting number.',
+            "returnType": 'number',
+            "handler": ({list: values, resolve}) => {
+                values = values !== null
+                    ? values
+                    : [];
 
-                subList.forEach((val) => {
-                    num -= parseMacroNumberOrVar(val, resolve);
+                if (values.length === 0) {
+                    return '0';
+                }
+
+                const subtractee = values.shift();
+
+                if (values.length === 0) {
+                    return String(subtractee);
+                }
+
+                let num = shorthandFloatResolver(subtractee, resolve);
+
+                values.forEach((val) => {
+                    num -= shorthandFloatResolver(val, resolve);
                 });
 
-                return num;
+                return String(num);
             }
         }
     );
@@ -63,46 +80,64 @@ export async function initMathMacros() {
     macros.register(
         'mul',
         {
-            category: 'Nox Utils - Math Ops',
-            list: {
-                min: 2
+            "category": 'Nox Utils - Math Ops',
+            "list": {
+                "min": 2
             },
-            description: 'Multiply a list of numbers together.',
-            returns: 'The resulting number.',
-            returnType: 'number',
-            handler: ({list: numList, resolve}) => {
+            "description": 'Multiply a list of numbers together.',
+            "returns": 'The resulting number.',
+            "returnType": 'number',
+            "handler": ({list: values, resolve}) => {
                 let num = 1;
 
-                numList.forEach((val) => {
-                    num *= parseMacroNumberOrVar(val, resolve);
+                values = values !== null
+                    ? values
+                    : [];
+
+                values.forEach((val) => {
+                    num *= shorthandFloatResolver(val, resolve);
                 });
 
-                return num;
+                return String(num);
             }
         }
     );
 
     /**
-     * Divide a list of numbers by the first item in the list.
+     * Divide the first number in by the following numbers in the list.
      */
     macros.register(
         'div',
         {
-            category: 'Nox Utils - Math Ops',
-            list: {
-                min: 2
+            "category": 'Nox Utils - Math Ops',
+            "list": {
+                "min": 2
             },
-            description: 'Divide a list of numbers by the first item in the list.',
-            returns: 'The resulting number.',
-            returnType: 'number',
-            handler: ({list: [dividend, ...divList], resolve}) => {
-                let num = parseMacroNumberOrVar(dividend, resolve);
+            "description": 'Divide the first number in by the following numbers in the list.',
+            "returns": 'The resulting number.',
+            "returnType": 'number',
+            "handler": ({list: values, resolve}) => {
+                values = values !== null
+                    ? values
+                    : [];
 
-                divList.forEach((val) => {
-                    num /= parseMacroNumberOrVar(val, resolve);
+                if (values.length === 0) {
+                    return '0';
+                }
+
+                const dividend = values.shift();
+
+                if (values.length === 0) {
+                    return String(dividend);
+                }
+
+                let num = shorthandFloatResolver(dividend, resolve);
+
+                values.forEach((val) => {
+                    num /= shorthandFloatResolver(val, resolve);
                 });
 
-                return num;
+                return String(num);
             }
         }
     );
@@ -113,15 +148,23 @@ export async function initMathMacros() {
     macros.register(
         'max',
         {
-            category: 'Nox Utils - Math Ops',
-            list: {
-                min: 2
+            "category": 'Nox Utils - Math Ops',
+            "list": {
+                "min": 2
             },
-            description: 'Perform a maximum operation on a list of numbers.',
-            returns: 'The resulting number.',
-            returnType: 'number',
-            handler: ({list: numList, resolve}) => {
-                return Math.max(...numList.map((val) => parseMacroNumberOrVar(val, resolve)));
+            "description": 'Perform a maximum operation on a list of numbers.',
+            "returns": 'The resulting number.',
+            "returnType": 'number',
+            "handler": ({list: values, resolve}) => {
+                values = values !== null
+                    ? values
+                    : [];
+
+                if (values.length === 0) {
+                    return '0';
+                }
+
+                return String(Math.max(...values.map((val) => shorthandFloatResolver(val, resolve))));
             }
         }
     );
@@ -132,15 +175,23 @@ export async function initMathMacros() {
     macros.register(
         'min',
         {
-            category: 'Nox Utils - Math Ops',
-            list: {
-                min: 2
+            "category": 'Nox Utils - Math Ops',
+            "list": {
+                "min": 2
             },
-            description: 'Perform a minimum operation on a list of numbers.',
-            returns: 'The resulting number.',
-            returnType: 'number',
-            handler: ({list: numList, resolve}) => {
-                return Math.min(...numList.map((val) => parseMacroNumberOrVar(val, resolve)));
+            "description": 'Perform a minimum operation on a list of numbers.',
+            "returns": 'The resulting number.',
+            "returnType": 'number',
+            "handler": ({list: values, resolve}) => {
+                values = values !== null
+                    ? values
+                    : [];
+
+                if (values.length === 0) {
+                    return '0';
+                }
+
+                return String(Math.min(...values.map((val) => shorthandFloatResolver(val, resolve))));
             }
         }
     );
@@ -151,22 +202,22 @@ export async function initMathMacros() {
     macros.register(
         'pow',
         {
-            category: 'Nox Utils - Math Ops',
-            unnamedArgs: [
+            "category": 'Nox Utils - Math Ops',
+            "unnamedArgs": [
                 {
-                    name: 'base',
-                    description: 'The base number.',
+                    "name": 'base',
+                    "description": 'The base number.',
                 },
                 {
-                    name: 'exponent',
-                    description: 'The exponent to apply to the base number.',
+                    "name": 'exponent',
+                    "description": 'The exponent to apply to the base number.',
                 },
             ],
-            description: 'Perform a power operation on a number.',
-            returns: 'The resulting number.',
-            returnType: 'number',
-            handler: ({unnamedArgs: [base, exponent], resolve}) => {
-                return Math.pow(parseMacroNumberOrVar(base, resolve), parseMacroNumberOrVar(exponent, resolve));
+            "description": 'Perform a power operation on a number.',
+            "returns": 'The resulting number.',
+            "returnType": 'number',
+            "handler": ({unnamedArgs: [base, exponent], resolve}) => {
+                return String(Math.pow(shorthandFloatResolver(base, resolve), shorthandFloatResolver(exponent, resolve)));
             }
         }
     );
@@ -177,22 +228,22 @@ export async function initMathMacros() {
     macros.register(
         'mod',
         {
-            category: 'Nox Utils - Math Ops',
-            unnamedArgs: [
+            "category": 'Nox Utils - Math Ops',
+            "unnamedArgs": [
                 {
-                    name: 'dividend',
-                    description: 'The dividend.',
+                    "name": 'dividend',
+                    "description": 'The dividend.',
                 },
                 {
-                    name: 'divisor',
-                    description: 'The divisor.',
+                    "name": 'divisor',
+                    "description": 'The divisor.',
                 },
             ],
-            description: 'Perform a modulo operation on two values.',
-            returns: 'The resulting number.',
-            returnType: 'number',
-            handler: ({unnamedArgs: [dividend, divisor], resolve}) => {
-                return parseMacroNumberOrVar(dividend, resolve) % parseMacroNumberOrVar(divisor, resolve);
+            "description": 'Perform a modulo operation on two values.',
+            "returns": 'The resulting number.',
+            "returnType": 'number',
+            "handler": ({unnamedArgs: [dividend, divisor], resolve}) => {
+                return String(shorthandFloatResolver(dividend, resolve) % shorthandFloatResolver(divisor, resolve));
             }
         }
     );
@@ -203,18 +254,18 @@ export async function initMathMacros() {
     macros.register(
         'sqrt',
         {
-            category: 'Nox Utils - Math Ops',
-            unnamedArgs: [
+            "category": 'Nox Utils - Math Ops',
+            "unnamedArgs": [
                 {
-                    name: 'value',
-                    description: 'The value to perform the square root operation on.',
+                    "name": 'value',
+                    "description": 'The value to perform the square root operation on.',
                 },
             ],
-            description: 'Perform a square root operation on a number.',
-            returns: 'The resulting number.',
-            returnType: 'number',
-            handler: ({unnamedArgs: [value], resolve}) => {
-                return Math.sqrt(parseMacroNumberOrVar(value, resolve));
+            "description": 'Perform a square root operation on a number.',
+            "returns": 'The resulting number.',
+            "returnType": 'number',
+            "handler": ({unnamedArgs: [value], resolve}) => {
+                return String(Math.sqrt(shorthandFloatResolver(value, resolve)));
             }
         }
     );
@@ -225,18 +276,18 @@ export async function initMathMacros() {
     macros.register(
         'abs',
         {
-            category: 'Nox Utils - Math Ops',
-            unnamedArgs: [
+            "category": 'Nox Utils - Math Ops',
+            "unnamedArgs": [
                 {
-                    name: 'value',
-                    description: 'The value to perform the absolute value operation on.',
+                    "name": 'value',
+                    "description": 'The value to perform the absolute value operation on.',
                 },
             ],
-            description: 'Perform an absolute value operation on a number.',
-            returns: 'The resulting number.',
-            returnType: 'number',
-            handler: ({unnamedArgs: [value], resolve}) => {
-                return Math.abs(parseMacroNumberOrVar(value, resolve));
+            "description": 'Perform an absolute value operation on a number.',
+            "returns": 'The resulting number.',
+            "returnType": 'number',
+            "handler": ({unnamedArgs: [value], resolve}) => {
+                return String(Math.abs(shorthandFloatResolver(value, resolve)));
             }
         }
     );
@@ -247,18 +298,18 @@ export async function initMathMacros() {
     macros.register(
         'log',
         {
-            category: 'Nox Utils - Math Ops',
-            unnamedArgs: [
+            "category": 'Nox Utils - Math Ops',
+            "unnamedArgs": [
                 {
-                    name: 'value',
-                    description: 'The value to perform the logarithm operation on.',
+                    "name": 'value',
+                    "description": 'The value to perform the logarithm operation on.',
                 },
             ],
-            description: 'Perform a logarithm operation on a number.',
-            returns: 'The resulting number.',
-            returnType: 'number',
-            handler: ({unnamedArgs: [value], resolve}) => {
-                return Math.log(parseMacroNumberOrVar(value, resolve));
+            "description": 'Perform a logarithm operation on a number.',
+            "returns": 'The resulting number.',
+            "returnType": 'number',
+            "handler": ({unnamedArgs: [value], resolve}) => {
+                return String(Math.log(shorthandFloatResolver(value, resolve)));
             }
         }
     );
@@ -269,18 +320,18 @@ export async function initMathMacros() {
     macros.register(
         'cos',
         {
-            category: 'Nox Utils - Math Ops',
-            unnamedArgs: [
+            "category": 'Nox Utils - Math Ops',
+            "unnamedArgs": [
                 {
-                    name: 'value',
-                    description: 'The value to perform the cosine operation on.',
+                    "name": 'value',
+                    "description": 'The value to perform the cosine operation on.',
                 },
             ],
-            description: 'Perform a cosine operation on a number.',
-            returns: 'The resulting number.',
-            returnType: 'number',
-            handler: ({unnamedArgs: [value], resolve}) => {
-                return Math.cos(parseMacroNumberOrVar(value, resolve));
+            "description": 'Perform a cosine operation on a number.',
+            "returns": 'The resulting number.',
+            "returnType": 'number',
+            "handler": ({unnamedArgs: [value], resolve}) => {
+                return String(Math.cos(shorthandFloatResolver(value, resolve)));
             }
         }
     );
@@ -291,18 +342,18 @@ export async function initMathMacros() {
     macros.register(
         'sin',
         {
-            category: 'Nox Utils - Math Ops',
-            unnamedArgs: [
+            "category": 'Nox Utils - Math Ops',
+            "unnamedArgs": [
                 {
-                    name: 'value',
-                    description: 'The value to perform the sine operation on.',
+                    "name": 'value',
+                    "description": 'The value to perform the sine operation on.',
                 },
             ],
-            description: 'Perform a sine operation on a number.',
-            returns: 'The resulting number.',
-            returnType: 'number',
-            handler: ({unnamedArgs: [value], resolve}) => {
-                return Math.sin(parseMacroNumberOrVar(value, resolve));
+            "description": 'Perform a sine operation on a number.',
+            "returns": 'The resulting number.',
+            "returnType": 'number',
+            "handler": ({unnamedArgs: [value], resolve}) => {
+                return String(Math.sin(shorthandFloatResolver(value, resolve)));
             }
         }
     );
@@ -313,18 +364,18 @@ export async function initMathMacros() {
     macros.register(
         'tan',
         {
-            category: 'Nox Utils - Math Ops',
-            unnamedArgs: [
+            "category": 'Nox Utils - Math Ops',
+            "unnamedArgs": [
                 {
-                    name: 'value',
-                    description: 'The value to perform the tangent operation on.',
+                    "name": 'value',
+                    "description": 'The value to perform the tangent operation on.',
                 },
             ],
-            description: 'Perform a tangent operation on a number.',
-            returns: 'The resulting number.',
-            returnType: 'number',
-            handler: ({unnamedArgs: [value], resolve}) => {
-                return Math.tan(parseMacroNumberOrVar(value, resolve));
+            "description": 'Perform a tangent operation on a number.',
+            "returns": 'The resulting number.',
+            "returnType": 'number',
+            "handler": ({unnamedArgs: [value], resolve}) => {
+                return String(Math.tan(shorthandFloatResolver(value, resolve)));
             }
         }
     );

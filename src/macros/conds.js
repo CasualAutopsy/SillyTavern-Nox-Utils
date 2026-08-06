@@ -1,45 +1,25 @@
-// @ts-nocheck
-const { macros } = await import(/* webpackIgnore: true */'/scripts/macros/macro-system.js');
+const { macros } = SillyTavern.getContext();
 
-const { parseValue } = await import(/* webpackIgnore: true */'/scripts/extensions/third-party/STLibs-Nox-Library/scripts/parsing.js');
-const { parseMacroValueOrVar, parseMacroNumberOrVar } = await import(/* webpackIgnore: true */'/scripts/extensions/third-party/STLibs-Nox-Library/scripts/macro-parsing.js');
+const {
+    shorthandValueResolver,
+    shorthandLaxBoolResolver, shorthandStrictBoolResolver,
+    shorthandLaxNumResolver, shorthandFloatResolver,
+    shorthandStringResolver
+} = NoxLib.MacroCoercionAndShorthand.VarShorthand;
 
-const condTypes = [
-    'condEq', 'condNeq',
-    'condGt', 'condLt',
-    'condGte', 'condLte'
-]
+const { GlobalCondMacroList } = NoxLib.MacroHelpers.Conditionals;
 
-function splitOnTopLevelElse(content) {
-    const { cst } = macros.parser.parseDocument(content);
-    const macroNodes = /** @type {import('chevrotain').CstNode[]} */ (cst?.children?.macro || []);
-
-    let depth = 0;
-    for (const macroNode of macroNodes) {
-        const info = macros.cstWalker.extractMacroInfo(macroNode);
-        if (!info) continue;
-
-        // Only track scoped {{if}} blocks (1 arg = condition only, expects {{/if}})
-        // Inline {{if condition::content}} has 2 args and doesn't affect depth
-        if (condTypes.includes(info.name) && !info.isClosing && (info.argCount === 3 || info.argCount === 2)) {
-            depth++;
-        } else if (condTypes.includes(info.name) && info.isClosing) {
-            depth--;
-        } else if (info.name === 'else' && depth === 0) {
-            return {
-                thenBranch: content.slice(0, info.startOffset),
-                elseBranch: content.slice(info.endOffset + 1),
-            };
-        }
-    }
-
-    return { thenBranch: content, elseBranch: undefined };
-}
+/**
+ * @typedef {import('/scripts/extensions/third-party/STLibs-Nox-Library/lib/macro-helpers.js').CondTuple} CondTuple'
+ */
 
 /**
  * Initialize the conditional macros
  */
 export async function initCondMacros() {
+    /** @type {CondTuple} */
+    const cond_batch = [];
+
     /**
      * Return the then branch content if the left and right values are equal.
      * Otherwise, return the else branch.
@@ -47,47 +27,53 @@ export async function initCondMacros() {
     macros.register(
         'condEq',
         {
-            category: 'Nox Utils - Conditional Statments',
-            description: 'Return the content if the left and right values are equal.',
-            unnamedArgs: [
+            "category": 'Nox Utils - Conditional Statments',
+            "unnamedArgs": [
                 {
-                    name: 'strict_types',
-                    description: 'Whether conditional should be strict on data types.',
+                    "name": 'strict_types',
+                    "type": ['string', 'integer', 'number', 'boolean'],
+                    "sampleValue": '1, 0, true, false, .localVar, $globalVar',
+                    "description": 'Whether conditional should be strict on data types.',
                 },
                 {
-                    name: 'left',
-                    description: 'The first value to compare.',
+                    "name": 'left',
+                    "type": ['string', 'integer', 'number', 'boolean'],
+                    "sampleValue": '2, 5.74, Hello World!, true, .localVar, $globalVar',
+                    "description": 'The first value to compare.',
                 },
                 {
-                    name: 'right',
-                    description: 'The second value to compare.',
+                    "name": 'right',
+                    "type": ['string', 'integer', 'number', 'boolean'],
+                    "sampleValue": '2, 5.74, Hello World!" true, .localVar, $globalVar',
+                    "description": 'The second value to compare.',
                 },
                 {
-                    name: 'content',
-                    description: 'The content branches to return.',
+                    "name": 'content',
+                    "type": 'string',
+                    "description": 'The content branches to return.',
                 },
             ],
-            exampleUsage: [
-                '{{condEq::true::{{randInt 1 10}}::1}}Both numbers are equal.{{else}}Both numbers are not equal.{{/condEq}}',
-                '{{condEq::false::1::true}}Both values are truthy.{{/condEq}}'
+            "description": 'Return the then branch content if the left and right values are equal.\nOtherwise, return the else branch.',
+            "returns": 'The content branch based on the conditional result.',
+            "returnType": 'string',
+            "displayOverride": '{{condEq::strict_types::left::right::content}}',
+            "exampleUsage": [
+                '{{condEq::true::.localVar::3::The number is 3!}}',
+                '{{condEq::1::$globalVar::Hello World!}}Hello World!{{/condEq}}',
+                '{{condEq::false::{{randInt::0::1}}::true}}Heads!{{else}}Tails!{{/condEq}}',
             ],
-            returns: 'The content branch based on the condition result.',
-            delayArgResolution: true,
-            handler: ({unnamedArgs: [rawStrictTypes, rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
+            "delayArgResolution": true,
+            "handler": ({unnamedArgs: [rawStrictTypes, rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
+                const
+                    left = shorthandValueResolver(rawLeft, resolve),
+                    right = shorthandValueResolver(rawRight, resolve);
 
-                let
-                    left = parseMacroValueOrVar(rawLeft, resolve),
-                    right = parseMacroValueOrVar(rawRight, resolve);
-
-                const { thenBranch, elseBranch } = splitOnTopLevelElse(rawContent);
-
+                const { thenBranch, elseBranch } = GlobalCondMacroList.splitOnTopLevelElse(rawContent);
 
                 let chosenBranch;
-                let strictTypes = rawStrictTypes !== ''
-                    ? parseMacroValueOrVar(rawStrictTypes, resolve)
-                    : true;
+                const strictTypes = shorthandLaxBoolResolver(rawStrictTypes, resolve);
 
-                if (strictTypes == true) {
+                if (strictTypes) {
                     chosenBranch = left === right ? thenBranch : elseBranch;
                 } else {
                     chosenBranch = left == right ? thenBranch : elseBranch;
@@ -97,15 +83,13 @@ export async function initCondMacros() {
                     return '';
                 }
 
-                let result = resolve(chosenBranch);
-                if (!flags.preserveWhitespace) {
-                    result = trimContent(result);
-                }
-
-                return result;
+                return flags.preserveWhitespace
+                    ? resolve(chosenBranch)
+                    : trimContent(resolve(chosenBranch));
             }
         }
     );
+    cond_batch.push(['condEq', 3]);
 
     /**
      * Return the then branch content if the left and right values are not equal.
@@ -114,43 +98,53 @@ export async function initCondMacros() {
     macros.register(
         'condNeq',
         {
-            category: 'Nox Utils - Conditional Statments',
-            description: 'Return the content if the left and right values are not equal.',
-            unnamedArgs: [
+            "category": 'Nox Utils - Conditional Statments',
+            "unnamedArgs": [
                 {
-                    name: 'strict_types',
-                    description: 'Whether conditional should be strict on data types.',
+                    "name": 'strict_types',
+                    "type": ['string', 'integer', 'number', 'boolean'],
+                    "sampleValue": '1, 0, true, false, .localVar, $globalVar',
+                    "description": 'Whether conditional should be strict on data types.',
                 },
                 {
-                    name: 'left',
-                    description: 'The first value to compare.',
+                    "name": 'left',
+                    "type": ['string', 'integer', 'number', 'boolean'],
+                    "sampleValue": '2, 5.74, Hello World!, true, .localVar, $globalVar',
+                    "description": 'The first value to compare.',
                 },
                 {
-                    name: 'right',
-                    description: 'The second value to compare.',
+                    "name": 'right',
+                    "type": ['string', 'integer', 'number', 'boolean'],
+                    "sampleValue": '2, 5.74, Hello World!" true, .localVar, $globalVar',
+                    "description": 'The second value to compare.',
                 },
                 {
-                    name: 'content',
-                    description: 'The content branches to return.',
+                    "name": 'content',
+                    "type": 'string',
+                    "description": 'The content branches to return.',
                 },
             ],
-            returns: 'The content branch based on the condition result.',
-            delayArgResolution: true,
-            handler: ({unnamedArgs: [rawStrictTypes, rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
+            "description": 'Return the then branch content if the left and right values are not equal.\nOtherwise, return the else branch.',
+            "returns": 'The content branch based on the conditional result.',
+            "returnType": 'string',
+            "displayOverride": '{{condNeq::strict_types::left::right::content}}',
+            "exampleUsage": [
+                '{{condNeq::true::.localVar::3::The number is not 3!}}',
+                '{{condNeq::1::$globalVar::{{noop}}}}The string is not empty!{{/condNeq}}',
+                '{{condNeq::false::{{randInt::0::1}}::false}}Pass!{{else}}Fail!{{/condNeq}}',
+            ],
+            "delayArgResolution": true,
+            "handler": ({unnamedArgs: [rawStrictTypes, rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
+                const
+                    left = shorthandValueResolver(rawLeft, resolve),
+                    right = shorthandValueResolver(rawRight, resolve);
 
-                let
-                    left = parseMacroValueOrVar(rawLeft, resolve),
-                    right = parseMacroValueOrVar(rawRight, resolve);
-
-                const { thenBranch, elseBranch } = splitOnTopLevelElse(rawContent);
-
+                const { thenBranch, elseBranch } = GlobalCondMacroList.splitOnTopLevelElse(rawContent);
 
                 let chosenBranch;
-                let strictTypes = rawStrictTypes !== ''
-                    ? parseMacroValueOrVar(rawStrictTypes, resolve)
-                    : true;
+                const strictTypes = shorthandLaxBoolResolver(rawStrictTypes, resolve);
 
-                if (strictTypes == true) {
+                if (strictTypes) {
                     chosenBranch = left !== right ? thenBranch : elseBranch;
                 } else {
                     chosenBranch = left != right ? thenBranch : elseBranch;
@@ -160,15 +154,13 @@ export async function initCondMacros() {
                     return '';
                 }
 
-                let result = resolve(chosenBranch);
-                if (!flags.preserveWhitespace) {
-                    result = trimContent(result);
-                }
-
-                return result;
+                return flags.preserveWhitespace
+                    ? resolve(chosenBranch)
+                    : trimContent(resolve(chosenBranch));
             }
         }
     );
+    cond_batch.push(['condNeq', 3]);
 
     /**
      * Return the then branch content if the left is greater than the right value.
@@ -177,36 +169,40 @@ export async function initCondMacros() {
     macros.register(
         'condGt',
         {
-            category: 'Nox Utils - Conditional Statments',
-            description: 'Return the content if the left value is greater than the right value.',
-            unnamedArgs: [
+            "category": 'Nox Utils - Conditional Statments',
+            "unnamedArgs": [
                 {
-                    name: 'left',
-                    description: 'The first value to compare.',
+                    "name": 'left',
+                    "type": ['integer', 'number', 'string'],
+                    "description": 'The first value to compare.',
                 },
                 {
-                    name: 'right',
-                    description: 'The second value to compare.',
+                    "name": 'right',
+                    "type": ['integer', 'number', 'string'],
+                    "description": 'The second value to compare.',
                 },
                 {
-                    name: 'content',
-                    description: 'The content branches to return.',
+                    "name": 'content',
+                    "type": 'string',
+                    "description": 'The content branches to return.',
                 },
             ],
-            returns: 'The content branch based on the condition result.',
-            delayArgResolution: true,
-            handler: ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
+            "description": 'Return the then branch content if the left is greater than the right value.\nOtherwise, return the else branch.',
+            "returns": 'The content branch based on the conditional result.',
+            "returnType": 'string',
+            "displayOverride": '{{condGt::left::right::content}}',
+            "exampleUsage": [
+                '{{condGt::5::3::The number is greater than 3!}}',
+                '{{condGt::{{randInt::0::10}}::5}}Pass!{{else}}Fail!{{/condGt}}',
+                '{{condGt::.localVar::0.5}}The number is greater than 0.5!{{/condGt}}',
+            ],
+            "delayArgResolution": true,
+            "handler": ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
+                const
+                    left = shorthandLaxNumResolver(rawLeft, resolve),
+                    right = shorthandLaxNumResolver(rawRight, resolve);
 
-                let
-                    left = parseMacroNumberOrVar(rawLeft, resolve),
-                    right = parseMacroNumberOrVar(rawRight, resolve);
-
-                if (Number.isNaN(left) || Number.isNaN(right)) {
-                    return 'NaN';
-                }
-
-                const { thenBranch, elseBranch } = splitOnTopLevelElse(rawContent);
-
+                const { thenBranch, elseBranch } = GlobalCondMacroList.splitOnTopLevelElse(rawContent);
 
                 const chosenBranch = left > right ? thenBranch : elseBranch;
 
@@ -214,15 +210,13 @@ export async function initCondMacros() {
                     return '';
                 }
 
-                let result = resolve(chosenBranch);
-                if (!flags.preserveWhitespace) {
-                    result = trimContent(result);
-                }
-
-                return result;
+                return flags.preserveWhitespace
+                    ? resolve(chosenBranch)
+                    : trimContent(resolve(chosenBranch));
             }
         }
     );
+    cond_batch.push(['condGt', 2]);
 
     /**
      * Return the then branch content if the left is greater than or equal to the right value.
@@ -231,36 +225,40 @@ export async function initCondMacros() {
     macros.register(
         'condGte',
         {
-            category: 'Nox Utils - Conditional Statments',
-            description: 'Return the content if the left value is greater than or equal to the right value.',
-            unnamedArgs: [
+            "category": 'Nox Utils - Conditional Statments',
+            "unnamedArgs": [
                 {
-                    name: 'left',
-                    description: 'The first value to compare.',
+                    "name": 'left',
+                    "type": ['integer', 'number', 'string'],
+                    "description": 'The first value to compare.',
                 },
                 {
-                    name: 'right',
-                    description: 'The second value to compare.',
+                    "name": 'right',
+                    "type": ['integer', 'number', 'string'],
+                    "description": 'The second value to compare.',
                 },
                 {
-                    name: 'content',
-                    description: 'The content branches to return.',
+                    "name": 'content',
+                    "type": 'string',
+                    "description": 'The content branches to return.',
                 },
             ],
-            returns: 'The content branch based on the condition result.',
-            delayArgResolution: true,
-            handler: ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
+            "description": 'Return the then branch content if the left is greater than or equal to the right value.\nOtherwise, return the else branch.',
+            "returns": 'The content branch based on the conditional result.',
+            "returnType": 'string',
+            "displayOverride": '{{condGte::left::right::content}}',
+            "exampleUsage": [
+                '{{condGte::5::3::The number is greater than or equal to 3!}}',
+                '{{condGte::{{randInt::0::10}}::5}}Pass!{{else}}Fail!{{/condGte}}',
+                '{{condGte::.localVar::0.5}}The number is greater than or equal to 0.5!{{/condGte}}',
+            ],
+            "delayArgResolution": true,
+            "handler": ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
+                const
+                    left = shorthandLaxNumResolver(rawLeft, resolve),
+                    right = shorthandLaxNumResolver(rawRight, resolve);
 
-                let
-                    left = parseMacroNumberOrVar(rawLeft, resolve),
-                    right = parseMacroNumberOrVar(rawRight, resolve);
-
-                if (Number.isNaN(left) || Number.isNaN(right)) {
-                    return 'NaN';
-                }
-
-                const { thenBranch, elseBranch } = splitOnTopLevelElse(rawContent);
-
+                const { thenBranch, elseBranch } = GlobalCondMacroList.splitOnTopLevelElse(rawContent);
 
                 const chosenBranch = left >= right ? thenBranch : elseBranch;
 
@@ -268,15 +266,13 @@ export async function initCondMacros() {
                     return '';
                 }
 
-                let result = resolve(chosenBranch);
-                if (!flags.preserveWhitespace) {
-                    result = trimContent(result);
-                }
-
-                return result;
+                return flags.preserveWhitespace
+                    ? resolve(chosenBranch)
+                    : trimContent(resolve(chosenBranch));
             }
         }
     );
+    cond_batch.push(['condGte', 2]);
 
     /**
      * Return the then branch content if the left is less than the right value.
@@ -285,36 +281,40 @@ export async function initCondMacros() {
     macros.register(
         'condLt',
         {
-            category: 'Nox Utils - Conditional Statments',
-            description: 'Return the content if the left value is less than the right value.',
-            unnamedArgs: [
+            "category": 'Nox Utils - Conditional Statments',
+            "unnamedArgs": [
                 {
-                    name: 'left',
-                    description: 'The first value to compare.',
+                    "name": 'left',
+                    "type": ['integer', 'number', 'string'],
+                    "description": 'The first value to compare.',
                 },
                 {
-                    name: 'right',
-                    description: 'The second value to compare.',
+                    "name": 'right',
+                    "type": ['integer', 'number', 'string'],
+                    "description": 'The second value to compare.',
                 },
                 {
-                    name: 'content',
-                    description: 'The content branches to return.',
+                    "name": 'content',
+                    "type": 'string',
+                    "description": 'The content branches to return.',
                 },
             ],
-            returns: 'The content branch based on the condition result.',
-            delayArgResolution: true,
-            handler: ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
+            "description": 'Return the then branch content if the left is less than the right value.\nOtherwise, return the else branch.',
+            "returns": 'The content branch based on the conditional result.',
+            "returnType": 'string',
+            "displayOverride": '{{condLt::left::right::content}}',
+            "exampleUsage": [
+                '{{condLt::3::5::The number is less than 5!}}',
+                '{{condLt::{{randInt::0::10}}::5}}Pass!{{else}}Fail!{{/condLt}}',
+                '{{condLt::.localVar::0.5}}The number is less than 0.5!{{/condLt}}',
+            ],
+            "delayArgResolution": true,
+            "handler": ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
+                const
+                    left = shorthandLaxNumResolver(rawLeft, resolve),
+                    right = shorthandLaxNumResolver(rawRight, resolve);
 
-                let
-                    left = parseMacroNumberOrVar(rawLeft, resolve),
-                    right = parseMacroNumberOrVar(rawRight, resolve);
-
-                if (Number.isNaN(left) || Number.isNaN(right)) {
-                    return 'NaN';
-                }
-
-                const { thenBranch, elseBranch } = splitOnTopLevelElse(rawContent);
-
+                const { thenBranch, elseBranch } = GlobalCondMacroList.splitOnTopLevelElse(rawContent);
 
                 const chosenBranch = left < right ? thenBranch : elseBranch;
 
@@ -322,15 +322,13 @@ export async function initCondMacros() {
                     return '';
                 }
 
-                let result = resolve(chosenBranch);
-                if (!flags.preserveWhitespace) {
-                    result = trimContent(result);
-                }
-
-                return result;
+                return flags.preserveWhitespace
+                    ? resolve(chosenBranch)
+                    : trimContent(resolve(chosenBranch));
             }
         }
     );
+    cond_batch.push(['condLt', 2]);
 
     /**
      * Return the then branch content if the left is less than or equal to the right value.
@@ -339,36 +337,40 @@ export async function initCondMacros() {
     macros.register(
         'condLte',
         {
-            category: 'Nox Utils - Conditional Statments',
-            description: 'Return the content if the left value is less than or equal to the right value.',
-            unnamedArgs: [
+            "category": 'Nox Utils - Conditional Statments',
+            "unnamedArgs": [
                 {
-                    name: 'left',
-                    description: 'The first value to compare.',
+                    "name": 'left',
+                    "type": ['integer', 'number', 'string'],
+                    "description": 'The first value to compare.',
                 },
                 {
-                    name: 'right',
-                    description: 'The second value to compare.',
+                    "name": 'right',
+                    "type": ['integer', 'number', 'string'],
+                    "description": 'The second value to compare.',
                 },
                 {
-                    name: 'content',
-                    description: 'The content branches to return.',
+                    "name": 'content',
+                    "type": 'string',
+                    "description": 'The content branches to return.',
                 },
             ],
-            returns: 'The content branch based on the condition result.',
-            delayArgResolution: true,
-            handler: ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
+            "description": 'Return the then branch content if the left is less than or equal to the right value.\nOtherwise, return the else branch.',
+            "returns": 'The content branch based on the conditional result.',
+            "returnType": 'string',
+            "displayOverride": '{{condLte::left::right::content}}',
+            "exampleUsage": [
+                '{{condLte::3::5::The number is less than or equal to 5!}}',
+                '{{condLte::{{randInt::0::10}}::5}}Pass!{{else}}Fail!{{/condLte}}',
+                '{{condLte::.localVar::0.5}}The number is less than or equal to 0.5!{{/condLte}}',
+            ],
+            "delayArgResolution": true,
+            "handler": ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
+                const
+                    left = shorthandLaxNumResolver(rawLeft, resolve),
+                    right = shorthandLaxNumResolver(rawRight, resolve);
 
-                let
-                    left = parseMacroNumberOrVar(rawLeft, resolve),
-                    right = parseMacroNumberOrVar(rawRight, resolve);
-
-                if (Number.isNaN(left) || Number.isNaN(right)) {
-                    return 'NaN';
-                }
-
-                const { thenBranch, elseBranch } = splitOnTopLevelElse(rawContent);
-
+                const { thenBranch, elseBranch } = GlobalCondMacroList.splitOnTopLevelElse(rawContent);
 
                 const chosenBranch = left <= right ? thenBranch : elseBranch;
 
@@ -376,13 +378,129 @@ export async function initCondMacros() {
                     return '';
                 }
 
-                let result = resolve(chosenBranch);
-                if (!flags.preserveWhitespace) {
-                    result = trimContent(result);
-                }
-
-                return result;
+                return flags.preserveWhitespace
+                    ? resolve(chosenBranch)
+                    : trimContent(resolve(chosenBranch));
             }
         }
     );
+    cond_batch.push(['condLte', 2]);
+
+    /**
+     * Return the then branch content if the left value is in the right value.
+     * Otherwise, return the else branch.
+     */
+    macros.register(
+        'condIn',
+        {
+            "category": 'Nox Utils - Conditional Statments',
+            "unnamedArgs": [
+                {
+                    "name": 'left',
+                    "type": ['string'],
+                    "description": 'The first value to compare.',
+                },
+                {
+                    "name": 'right',
+                    "type": ['string'],
+                    "description": 'The second value to compare.',
+                },
+                {
+                    "name": 'content',
+                    "type": 'string',
+                    "description": 'The content branches to return.',
+                },
+            ],
+            "description": 'Return the then branch content if the left value is in the right value.\nOtherwise, return the else branch.',
+            "returns": 'The content branch based on the conditional result.',
+            "returnType": 'string',
+            "displayOverride": '{{condIn::left::right::content}}',
+            "exampleUsage": [
+                '{{condIn::Hello::Hello World!::The string contains "Hello"!}}',
+                '{{condIn::{{randInt::0::10}}::55::The number is 5!}}',
+                '{{condIn::.localVar::$globalVar}}The global variable contains the local variable as a substring!{{else}}The local var is not in the global var!{{/condIn}}',
+            ],
+            "delayArgResolution": true,
+            "handler": ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
+                const
+                    left = shorthandStringResolver(rawLeft, resolve),
+                    right = shorthandStringResolver(rawRight, resolve);
+
+                const { thenBranch, elseBranch } = GlobalCondMacroList.splitOnTopLevelElse(rawContent);
+
+                const chosenBranch = right.includes(left)
+                    ? thenBranch
+                    : elseBranch;
+
+                if (chosenBranch === undefined) {
+                    return '';
+                }
+
+                return flags.preserveWhitespace
+                    ? resolve(chosenBranch)
+                    : trimContent(resolve(chosenBranch));
+            }
+        }
+    );
+    cond_batch.push(['condIn', 2]);
+
+    /**
+     * Return the then branch content if the left value is not in the right value.
+     * Otherwise, return the else branch.
+     */
+    macros.register(
+        'condNin',
+        {
+            "category": 'Nox Utils - Conditional Statments',
+            "unnamedArgs": [
+                {
+                    "name": 'left',
+                    "type": ['string'],
+                    "description": 'The first value to compare.',
+                },
+                {
+                    "name": 'right',
+                    "type": ['string'],
+                    "description": 'The second value to compare.',
+                },
+                {
+                    "name": 'content',
+                    "type": 'string',
+                    "description": 'The content branches to return.',
+                },
+            ],
+            "description": 'Return the then branch content if the left value is not in the right value.\nOtherwise, return the else branch.',
+            "returns": 'The content branch based on the conditional result.',
+            "returnType": 'string',
+            "displayOverride": '{{condNin::left::right::content}}',
+            "exampleUsage": [
+                '{{condNin::Hello::Hello World!::The string does not contain "Hello"!}}',
+                '{{condNin::{{randInt::0::10}}::55::The number is not 5!}}',
+                '{{condNin::.localVar::$globalVar}}The global variable does not contain the local variable as a substring!{{else}}The local var is in the global var!{{/condNin}}',
+            ],
+            "delayArgResolution": true,
+            "handler": ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
+                const
+                    left = shorthandStringResolver(rawLeft, resolve),
+                    right = shorthandStringResolver(rawRight, resolve);
+
+                const { thenBranch, elseBranch } = GlobalCondMacroList.splitOnTopLevelElse(rawContent);
+
+                const chosenBranch = !right.includes(left)
+                    ? thenBranch
+                    : elseBranch;
+
+                if (chosenBranch === undefined) {
+                    return '';
+                }
+
+                return flags.preserveWhitespace
+                    ? resolve(chosenBranch)
+                    : trimContent(resolve(chosenBranch));
+            }
+        }
+    );
+    cond_batch.push(['condNin', 2]);
+
+    GlobalCondMacroList.addMacroBatch(cond_batch);
 }
