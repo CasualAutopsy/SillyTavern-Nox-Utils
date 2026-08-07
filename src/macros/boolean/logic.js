@@ -26,6 +26,9 @@ export async function initBoolLogic() {
                     "description": 'Whether to be strict with boolean datatypes.',
                 },
             ],
+            "list": {
+                "min": 1
+            },
             "description": 'Check if all values are truthy.',
             "returns": 'Whether all values are truthy.',
             "returnType": 'boolean',
