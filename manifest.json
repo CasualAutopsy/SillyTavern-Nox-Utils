@@ -1,11 +1,12 @@
 {
     "display_name": "Nox Utilities",
-    "loading_order": 1,
-    "requires": [],
-    "optional": [],
-    "js": "src/index.js",
+    "loading_order": 42,
+    "dependencies": [
+        "STLibs-Nox-Library"
+    ],
+    "js": "dist/index.js",
     "author": "CasualAutopsy",
-    "version": "0.3.0",
+    "version": "0.4.0-beta",
     "homePage": "https://github.com/CasualAutopsy/SillyTavern-Nox-Utils",
     "auto_update": false
 }

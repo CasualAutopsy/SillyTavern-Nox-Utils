@@ -20,12 +20,11 @@ export async function initMathMacros() {
             "returns": 'The resulting number.',
             "returnType": 'number',
             "handler": ({list: values, resolve}) => {
+                if (values == null) {
+                    return '0';
+                }
+
                 let num = 0;
-
-                values = values !== null
-                    ? values
-                    : [];
-
                 values.forEach((val) => {
                     num += shorthandFloatResolver(val, resolve);
                 });
@@ -49,17 +48,13 @@ export async function initMathMacros() {
             "returns": 'The resulting number.',
             "returnType": 'number',
             "handler": ({list: values, resolve}) => {
-                values = values !== null
-                    ? values
-                    : [];
-
-                if (values.length === 0) {
+                if (values == null) {
                     return '0';
                 }
 
                 const subtractee = values.shift();
 
-                if (values.length === 0) {
+                if (values.length === 0 || subtractee == null) {
                     return String(subtractee);
                 }
 
@@ -88,11 +83,11 @@ export async function initMathMacros() {
             "returns": 'The resulting number.',
             "returnType": 'number',
             "handler": ({list: values, resolve}) => {
-                let num = 1;
+                if (values == null) {
+                    return '1';
+                }
 
-                values = values !== null
-                    ? values
-                    : [];
+                let num = 1;
 
                 values.forEach((val) => {
                     num *= shorthandFloatResolver(val, resolve);
@@ -117,17 +112,13 @@ export async function initMathMacros() {
             "returns": 'The resulting number.',
             "returnType": 'number',
             "handler": ({list: values, resolve}) => {
-                values = values !== null
-                    ? values
-                    : [];
-
-                if (values.length === 0) {
+                if (values == null) {
                     return '0';
                 }
 
                 const dividend = values.shift();
 
-                if (values.length === 0) {
+                if (values.length === 0 || dividend == null) {
                     return String(dividend);
                 }
 
@@ -156,12 +147,8 @@ export async function initMathMacros() {
             "returns": 'The resulting number.',
             "returnType": 'number',
             "handler": ({list: values, resolve}) => {
-                values = values !== null
-                    ? values
-                    : [];
-
-                if (values.length === 0) {
-                    return '0';
+                if (values == null) {
+                    return 'NaN';
                 }
 
                 return String(Math.max(...values.map((val) => shorthandFloatResolver(val, resolve))));
@@ -183,12 +170,8 @@ export async function initMathMacros() {
             "returns": 'The resulting number.',
             "returnType": 'number',
             "handler": ({list: values, resolve}) => {
-                values = values !== null
-                    ? values
-                    : [];
-
-                if (values.length === 0) {
-                    return '0';
+                if (values == null) {
+                    return 'NaN';
                 }
 
                 return String(Math.min(...values.map((val) => shorthandFloatResolver(val, resolve))));

@@ -1,77 +1,16 @@
-const { macros } = SillyTavern.getContext();
+import {
+    handlerAND, handlerOR,
+    handlerNOT,
+    handlerNAND, handlerNOR,
+    handlerXOR, handlerXNOR
+} from './logic-handlers.js';
 
-const { shorthandLaxBoolResolver, shorthandStrictBoolResolver } = NoxLib.MacroCoercionAndShorthand.VarShorthand;
+const { macros } = SillyTavern.getContext();
 
 /**
  * Initialize the boolean ops macros
  */
-export async function initBoolMacros() {
-    /**
-     * Check if a value is falsy.
-     */
-    macros.register(
-        'isFalsy',
-        {
-            "category": 'Nox Utils - Boolean Ops',
-            "unnamedArgs": [
-                {
-                    "name": 'value',
-                    "type": ['string', 'integer', 'number', 'boolean'],
-                    "sampleValue": '1, 0, hello world!, true, .localVar, $globalVar',
-                    "description": 'The value to check.',
-                },
-            ],
-            "description": 'Check if a value is falsy.',
-            "returns": 'Whether the value is falsy.',
-            "returnType": 'boolean',
-            "displayOverride": '{{isFalsy::value}}',
-            "exampleUsage": [
-                '{{isFalsy::1}}',
-                '{{isFalsy::0}}',
-                '{{isFalsy::hello world!}}',
-                '{{isFalsy::true}}',
-                '{{isFalsy::.localVar}}',
-                '{{isFalsy::$globalVar}}',
-            ],
-            "handler": ({unnamedArgs: [valRaw], resolve}) => {
-                return String(!shorthandLaxBoolResolver(valRaw, resolve));
-            }
-        }
-    );
-
-    /**
-     * Check if a value is truthy.
-     */
-    macros.register(
-        'isTruthy',
-        {
-            "category": 'Nox Utils - Boolean Ops',
-            "unnamedArgs": [
-                {
-                    "name": 'value',
-                    "type": ['string', 'integer', 'number', 'boolean'],
-                    "sampleValue": '1, 0, hello world!, true, .localVar, $globalVar',
-                    "description": 'The value to check.',
-                },
-            ],
-            "description": 'Check if a value is truthy.',
-            "returns": 'Whether the value is truthy.',
-            "returnType": 'boolean',
-            "displayOverride": '{{isTruthy::value}}',
-            "exampleUsage": [
-                '{{isTruthy::1}}',
-                '{{isTruthy::0}}',
-                '{{isTruthy::hello world!}}',
-                '{{isTruthy::true}}',
-                '{{isTruthy::.localVar}}',
-                '{{isTruthy::$globalVar}}',
-            ],
-            "handler": ({unnamedArgs: [valRaw], resolve}) => {
-                return String(shorthandLaxBoolResolver(valRaw, resolve));
-            }
-        }
-    );
-
+export async function initBoolLogic() {
     /**
      * Check if all values are truthy.
      */
@@ -98,31 +37,7 @@ export async function initBoolMacros() {
                 '{{and::true::true::true}}',
                 '{{and::false::.localVar::$globalVar}}',
             ],
-            "handler": ({unnamedArgs: [rawStrictTypes], list: values, resolve}) => {
-                const strict = shorthandLaxBoolResolver(rawStrictTypes, resolve);
-
-                values = values !== null
-                    ? values
-                    : [];
-
-                if (values.length === 0) {
-                    return 'false';
-                }
-
-                for (const value of values) {
-                    if (strict) {
-                        if (!shorthandStrictBoolResolver(value, resolve)) {
-                            return 'false';
-                        }
-                    } else {
-                        if (!shorthandLaxBoolResolver(value, resolve)) {
-                            return 'false';
-                        }
-                    }
-                }
-
-                return 'true';
-            }
+            "handler": handlerAND
         }
     );
 
@@ -155,31 +70,7 @@ export async function initBoolMacros() {
                 '{{or::true::true::true}}',
                 '{{or::false::.localVar::$globalVar}}',
             ],
-            "handler": ({unnamedArgs: [rawStrictTypes], list: values, resolve}) => {
-                const strict = shorthandLaxBoolResolver(rawStrictTypes, resolve);
-
-                values = values !== null
-                    ? values
-                    : [];
-
-                if (values.length === 0) {
-                    return 'false';
-                }
-
-                for (const value of values) {
-                    if (strict) {
-                        if (shorthandStrictBoolResolver(value, resolve)) {
-                            return 'true';
-                        }
-                    } else {
-                        if (shorthandLaxBoolResolver(value, resolve)) {
-                            return 'true';
-                        }
-                    }
-                }
-
-                return 'false';
-            }
+            "handler": handlerOR
         }
     );
 
@@ -215,15 +106,7 @@ export async function initBoolMacros() {
                 '{{not::true::.localVar}}',
                 '{{not::false::$globalVar}}',
             ],
-            "handler": ({unnamedArgs: [rawStrictTypes, value], resolve}) => {
-                const strict = shorthandLaxBoolResolver(rawStrictTypes, resolve);
-
-                if (strict) {
-                    return String(!shorthandStrictBoolResolver(value, resolve));
-                } else {
-                    return String(!shorthandLaxBoolResolver(value, resolve));
-                }
-            }
+            "handler": handlerNOT
         }
     );
 
@@ -256,31 +139,7 @@ export async function initBoolMacros() {
                 '{{nand::true::true::true}}',
                 '{{nand::false::.localVar::$globalVar}}',
             ],
-            "handler": ({unnamedArgs: [rawStrictTypes], list: values, resolve}) => {
-                const strict = shorthandLaxBoolResolver(rawStrictTypes, resolve);
-
-                values = values !== null
-                    ? values
-                    : [];
-
-                if (values.length === 0) {
-                    return 'false';
-                }
-
-                for (const value of values) {
-                    if (strict) {
-                        if (!shorthandStrictBoolResolver(value, resolve)) {
-                            return 'true';
-                        }
-                    } else {
-                        if (!shorthandLaxBoolResolver(value, resolve)) {
-                            return 'true';
-                        }
-                    }
-                }
-
-                return 'false';
-            }
+            "handler": handlerNAND
         }
     );
 
@@ -313,31 +172,7 @@ export async function initBoolMacros() {
                 '{{nor::true::true::true}}',
                 '{{nor::false::.localVar::$globalVar}}',
             ],
-            "handler": ({unnamedArgs: [rawStrictTypes], list: values, resolve}) => {
-                const strict = shorthandLaxBoolResolver(rawStrictTypes, resolve);
-
-                values = values !== null
-                    ? values
-                    : [];
-
-                if (values.length === 0) {
-                    return 'false';
-                }
-
-                for (const value of values) {
-                    if (strict) {
-                        if (shorthandStrictBoolResolver(value, resolve)) {
-                            return 'false';
-                        }
-                    } else {
-                        if (shorthandLaxBoolResolver(value, resolve)) {
-                            return 'false';
-                        }
-                    }
-                }
-
-                return 'true';
-            }
+            "handler": handlerNOR
         }
     );
 
@@ -379,23 +214,7 @@ export async function initBoolMacros() {
                 '{{xor::true::true::true}}',
                 '{{xor::false::.localVar::$globalVar}}',
             ],
-            "handler": ({unnamedArgs: [rawStrictTypes, value1, value2], resolve}) => {
-                const strict = shorthandLaxBoolResolver(rawStrictTypes, resolve);
-
-                if (strict) {
-                    if (shorthandStrictBoolResolver(value1, resolve)) {
-                        return String(shorthandStrictBoolResolver(value2, resolve));
-                    } else {
-                        return String(shorthandStrictBoolResolver(value2, resolve));
-                    }
-                } else {
-                    if (shorthandLaxBoolResolver(value1, resolve)) {
-                        return String(shorthandLaxBoolResolver(value2, resolve));
-                    } else {
-                        return String(shorthandLaxBoolResolver(value2, resolve));
-                    }
-                }
-            }
+            "handler": handlerXOR
         }
     );
 
@@ -428,42 +247,7 @@ export async function initBoolMacros() {
                 '{{xnor::true::true::true}}',
                 '{{xnor::false::.localVar::$globalVar}}',
             ],
-            "handler": ({unnamedArgs: [rawStrictTypes], list: values, resolve}) => {
-                values = values !== null
-                    ? values
-                    : [];
-
-                const firstVal = values.shift();
-
-                if (values.length === 0 || !firstVal) {
-                    return 'false';
-                }
-
-                if (values.length === 0) {
-                    return 'true';
-                }
-
-                const
-                    strict = shorthandLaxBoolResolver(rawStrictTypes, resolve),
-
-                    firstValBool = strict
-                        ? shorthandStrictBoolResolver(firstVal, resolve)
-                        : shorthandLaxBoolResolver(firstVal, resolve);
-
-                for (const value of values) {
-                    if (strict) {
-                        if (shorthandStrictBoolResolver(value, resolve) !== firstValBool) {
-                            return 'false';
-                        }
-                    } else {
-                        if (shorthandLaxBoolResolver(value, resolve) !== firstValBool) {
-                            return 'false';
-                        }
-                    }
-                }
-
-                return 'true';
-            }
+            "handler": handlerXNOR
         }
     );
 }

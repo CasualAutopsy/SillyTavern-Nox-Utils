@@ -1,46 +1,78 @@
-// @ts-nocheck
 const { macros } = SillyTavern.getContext();
 
-const { shorthandStringResolver, shorthandLaxBoolResolver } = NoxLib.MacroCoercionAndShorthand.VarShorthand;
-const { toRegExp } = NoxLib.StringOps.RegExHelper;
+const {
+    sampleSize,
+    round
+} = SillyTavern.libs.lodash;
+
+const {
+    shorthandStringResolver,
+} = NoxLib.MacroCoercionAndShorthand.VarShorthand;
+
+const { boolCoercion, intParse } = NoxLib.MacroCoercionAndShorthand.ValCoercion;
 
 export async function initStringOpsMacros() {
     macros.register(
-        'reMatchAll',
+        'repeat',
         {
-            "category": "Nox Utils - String Operations",
+            "category": 'Nox Utils - Repitition',
             "unnamedArgs": [
                 {
-                    "name": "find",
+                    "name": 'resolve-after',
                     "optional": false,
-                    "type": ["string"],
-                    "description": "The regex to match against",
+                    "description": 'Whether to resolve nested macros after repeating text content.',
                 },
                 {
-                    "name": "dedupe",
+                    "name": 'n',
                     "optional": false,
-                    "type": ["boolean"],
-                    "description": "Whether to dedupe the results",
+                    "description": 'Number of times the text content should be repeated.',
                 },
                 {
-                    "name": "text",
+                    "name": 'seperator',
                     "optional": false,
-                    "type": ["string"],
-                    "description": "The text to match against",
+                    "description": 'Text to inject between each repeat.'
+                },
+                {
+                    "name": 'content',
+                    "optional": false,
+                    "description": 'The text content to be repeated.'
                 }
             ],
-            "description": "Match all instances of a regex in a string",
-            "returns": "A list of matches",
-            "handler": ({unnamedArgs:[findRaw, dedupeRaw, textRaw], flags, resolve, trimContent}) => {
-                const find = toRegExp(shorthandStringResolver(findRaw, resolve));
-                const dedupe = shorthandLaxBoolResolver(dedupeRaw, resolve);
-                const text = shorthandStringResolver(textRaw, resolve);
+            "description": 'Repeat the given text content N number of times.',
+            "returns": 'The repeated text content.',
+            "delayArgResolution": true,
+            handler: ({
+                unnamedArgs: [resolveAfter, nRepeat, seperator, textContent],
+                flags: {preserveWhitespace},
+                trimContent,
+                resolve
+            }) => {
+                const
+                    doAfter = boolCoercion(resolveAfter),
+                    doN = intParse(nRepeat);
 
-                if (dedupe) {
-                    return JSON.stringify([...new Set(text.matchAll(find).map(m => m[0]))])
-                } else {
-                    return JSON.stringify([...text.matchAll(find).map(m => m[0])])
+                if (doN === 1) {
+                    return preserveWhitespace
+                        ? resolve(textContent)
+                        : trimContent(resolve(textContent));
+                } else if (doN <= 0) {
+                    return '';
                 }
+
+                let text;
+                if (doAfter) {
+                    text = shorthandStringResolver(textContent, resolve, true);
+                    text += (seperator + shorthandStringResolver(textContent, resolve, true)).repeat(doN-1);
+                    text = resolve(text);
+                } else {
+                    seperator = resolve(seperator);
+                    text = shorthandStringResolver(textContent, resolve, true);
+                    text += (seperator + text).repeat(doN);
+                }
+
+                return preserveWhitespace
+                    ? text
+                    : trimContent(text);
             }
         }
     );
