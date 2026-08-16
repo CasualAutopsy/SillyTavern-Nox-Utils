@@ -1,22 +1,24 @@
+import {
+    handlerEq, handlerNeq,
+    handlerGt, handlerGte,
+    handlerLt, handlerLte,
+    handlerIn, handlerNin
+} from './cond-handlers.js';
+
 const { macros } = SillyTavern.getContext();
 
-const {
-    shorthandValueResolver,
-    shorthandLaxBoolResolver, shorthandStrictBoolResolver,
-    shorthandLaxNumResolver, shorthandFloatResolver,
-    shorthandStringResolver
-} = NoxLib.MacroCoercionAndShorthand.VarShorthand;
-
-const { GlobalCondMacroList } = NoxLib.MacroHelpers.Conditionals;
+const condData = NoxLib.MacroHandlers.ConditionalHandlers.GlobalConditionalData;
 
 /**
+ * @import {} from '../../../global'
+ *
  * @typedef {import('/scripts/extensions/third-party/STLibs-Nox-Library/lib/macro-helpers.js').CondTuple} CondTuple'
  */
 
 /**
  * Initialize the conditional macros
  */
-export async function initCondMacros() {
+export async function initConds() {
     /** @type {CondTuple} */
     const cond_batch = [];
 
@@ -63,30 +65,7 @@ export async function initCondMacros() {
                 '{{condEq::false::{{randInt::0::1}}::true}}Heads!{{else}}Tails!{{/condEq}}',
             ],
             "delayArgResolution": true,
-            "handler": ({unnamedArgs: [rawStrictTypes, rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
-                const
-                    left = shorthandValueResolver(rawLeft, resolve),
-                    right = shorthandValueResolver(rawRight, resolve);
-
-                const { thenBranch, elseBranch } = GlobalCondMacroList.splitOnTopLevelElse(rawContent);
-
-                let chosenBranch;
-                const strictTypes = shorthandLaxBoolResolver(rawStrictTypes, resolve);
-
-                if (strictTypes) {
-                    chosenBranch = left === right ? thenBranch : elseBranch;
-                } else {
-                    chosenBranch = left == right ? thenBranch : elseBranch;
-                }
-
-                if (chosenBranch === undefined) {
-                    return '';
-                }
-
-                return flags.preserveWhitespace
-                    ? resolve(chosenBranch)
-                    : trimContent(resolve(chosenBranch));
-            }
+            "handler": handlerEq
         }
     );
     cond_batch.push(['condEq', 3]);
@@ -134,30 +113,7 @@ export async function initCondMacros() {
                 '{{condNeq::false::{{randInt::0::1}}::false}}Pass!{{else}}Fail!{{/condNeq}}',
             ],
             "delayArgResolution": true,
-            "handler": ({unnamedArgs: [rawStrictTypes, rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
-                const
-                    left = shorthandValueResolver(rawLeft, resolve),
-                    right = shorthandValueResolver(rawRight, resolve);
-
-                const { thenBranch, elseBranch } = GlobalCondMacroList.splitOnTopLevelElse(rawContent);
-
-                let chosenBranch;
-                const strictTypes = shorthandLaxBoolResolver(rawStrictTypes, resolve);
-
-                if (strictTypes) {
-                    chosenBranch = left !== right ? thenBranch : elseBranch;
-                } else {
-                    chosenBranch = left != right ? thenBranch : elseBranch;
-                }
-
-                if (chosenBranch === undefined) {
-                    return '';
-                }
-
-                return flags.preserveWhitespace
-                    ? resolve(chosenBranch)
-                    : trimContent(resolve(chosenBranch));
-            }
+            "handler": handlerNeq
         }
     );
     cond_batch.push(['condNeq', 3]);
@@ -197,23 +153,7 @@ export async function initCondMacros() {
                 '{{condGt::.localVar::0.5}}The number is greater than 0.5!{{/condGt}}',
             ],
             "delayArgResolution": true,
-            "handler": ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
-                const
-                    left = shorthandLaxNumResolver(rawLeft, resolve),
-                    right = shorthandLaxNumResolver(rawRight, resolve);
-
-                const { thenBranch, elseBranch } = GlobalCondMacroList.splitOnTopLevelElse(rawContent);
-
-                const chosenBranch = left > right ? thenBranch : elseBranch;
-
-                if (chosenBranch === undefined) {
-                    return '';
-                }
-
-                return flags.preserveWhitespace
-                    ? resolve(chosenBranch)
-                    : trimContent(resolve(chosenBranch));
-            }
+            "handler": handlerGt
         }
     );
     cond_batch.push(['condGt', 2]);
@@ -253,23 +193,7 @@ export async function initCondMacros() {
                 '{{condGte::.localVar::0.5}}The number is greater than or equal to 0.5!{{/condGte}}',
             ],
             "delayArgResolution": true,
-            "handler": ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
-                const
-                    left = shorthandLaxNumResolver(rawLeft, resolve),
-                    right = shorthandLaxNumResolver(rawRight, resolve);
-
-                const { thenBranch, elseBranch } = GlobalCondMacroList.splitOnTopLevelElse(rawContent);
-
-                const chosenBranch = left >= right ? thenBranch : elseBranch;
-
-                if (chosenBranch === undefined) {
-                    return '';
-                }
-
-                return flags.preserveWhitespace
-                    ? resolve(chosenBranch)
-                    : trimContent(resolve(chosenBranch));
-            }
+            "handler": handlerGte
         }
     );
     cond_batch.push(['condGte', 2]);
@@ -309,23 +233,7 @@ export async function initCondMacros() {
                 '{{condLt::.localVar::0.5}}The number is less than 0.5!{{/condLt}}',
             ],
             "delayArgResolution": true,
-            "handler": ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
-                const
-                    left = shorthandLaxNumResolver(rawLeft, resolve),
-                    right = shorthandLaxNumResolver(rawRight, resolve);
-
-                const { thenBranch, elseBranch } = GlobalCondMacroList.splitOnTopLevelElse(rawContent);
-
-                const chosenBranch = left < right ? thenBranch : elseBranch;
-
-                if (chosenBranch === undefined) {
-                    return '';
-                }
-
-                return flags.preserveWhitespace
-                    ? resolve(chosenBranch)
-                    : trimContent(resolve(chosenBranch));
-            }
+            "handler": handlerLt
         }
     );
     cond_batch.push(['condLt', 2]);
@@ -365,23 +273,7 @@ export async function initCondMacros() {
                 '{{condLte::.localVar::0.5}}The number is less than or equal to 0.5!{{/condLte}}',
             ],
             "delayArgResolution": true,
-            "handler": ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
-                const
-                    left = shorthandLaxNumResolver(rawLeft, resolve),
-                    right = shorthandLaxNumResolver(rawRight, resolve);
-
-                const { thenBranch, elseBranch } = GlobalCondMacroList.splitOnTopLevelElse(rawContent);
-
-                const chosenBranch = left <= right ? thenBranch : elseBranch;
-
-                if (chosenBranch === undefined) {
-                    return '';
-                }
-
-                return flags.preserveWhitespace
-                    ? resolve(chosenBranch)
-                    : trimContent(resolve(chosenBranch));
-            }
+            "handler": handlerLte
         }
     );
     cond_batch.push(['condLte', 2]);
@@ -421,25 +313,7 @@ export async function initCondMacros() {
                 '{{condIn::.localVar::$globalVar}}The global variable contains the local variable as a substring!{{else}}The local var is not in the global var!{{/condIn}}',
             ],
             "delayArgResolution": true,
-            "handler": ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
-                const
-                    left = shorthandStringResolver(rawLeft, resolve),
-                    right = shorthandStringResolver(rawRight, resolve);
-
-                const { thenBranch, elseBranch } = GlobalCondMacroList.splitOnTopLevelElse(rawContent);
-
-                const chosenBranch = right.includes(left)
-                    ? thenBranch
-                    : elseBranch;
-
-                if (chosenBranch === undefined) {
-                    return '';
-                }
-
-                return flags.preserveWhitespace
-                    ? resolve(chosenBranch)
-                    : trimContent(resolve(chosenBranch));
-            }
+            "handler": handlerIn
         }
     );
     cond_batch.push(['condIn', 2]);
@@ -479,28 +353,10 @@ export async function initCondMacros() {
                 '{{condNin::.localVar::$globalVar}}The global variable does not contain the local variable as a substring!{{else}}The local var is in the global var!{{/condNin}}',
             ],
             "delayArgResolution": true,
-            "handler": ({unnamedArgs: [rawLeft, rawRight, rawContent], flags, resolve, trimContent}) => {
-                const
-                    left = shorthandStringResolver(rawLeft, resolve),
-                    right = shorthandStringResolver(rawRight, resolve);
-
-                const { thenBranch, elseBranch } = GlobalCondMacroList.splitOnTopLevelElse(rawContent);
-
-                const chosenBranch = !right.includes(left)
-                    ? thenBranch
-                    : elseBranch;
-
-                if (chosenBranch === undefined) {
-                    return '';
-                }
-
-                return flags.preserveWhitespace
-                    ? resolve(chosenBranch)
-                    : trimContent(resolve(chosenBranch));
-            }
+            "handler": handlerNin
         }
     );
     cond_batch.push(['condNin', 2]);
 
-    GlobalCondMacroList.addMacroBatch(cond_batch);
+    condData.addMacroBatch(cond_batch);
 }

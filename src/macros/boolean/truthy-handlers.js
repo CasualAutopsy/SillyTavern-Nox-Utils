@@ -1,25 +1,28 @@
-const { shorthandLaxBoolResolver } = NoxLib.MacroCoercionAndShorthand.VarShorthand;
+// @ts-check
+const argH = NoxLib.MacroHandlers.argHandler;
 
 /**
  * @typedef {import('../../../../../../macros/engine/MacroRegistry').MacroExecutionContext} MacroExecutionContext
  */
 
 /**
+ * Falsy check macro handler.
  *
- * @param {MacroExecutionContext} param0
- * @returns {String}
+ * @param {MacroExecutionContext} param0 - Macro context.
+ * @returns {String} Stringified check result.
  */
-function handlerIsFalsy({unnamedArgs: [valRaw], resolve}) {
-    return String(!shorthandLaxBoolResolver(valRaw, resolve));
+function handlerIsFalsy({unnamedArgs: [val]}) {
+    return String(!argH.stBoolVar(val));
 }
 
 /**
+ * Truthy check macro handler.
  *
- * @param {MacroExecutionContext} param0
- * @returns {String}
+ * @param {MacroExecutionContext} param0 - Macro context.
+ * @returns {String} Stringified check result.
  */
-function handlerIsTruthy({unnamedArgs: [valRaw], resolve}) {
-    return String(shorthandLaxBoolResolver(valRaw, resolve));
+function handlerIsTruthy({unnamedArgs: [val]}) {
+    return String(argH.stBoolVar(val));
 }
 
 export {handlerIsFalsy, handlerIsTruthy};

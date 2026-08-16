@@ -1,29 +1,12 @@
+import { handlerLastMsgByRole, handlerLastNMessages } from './history-handlers.js';
+
 const { macros } = SillyTavern.getContext();
 
-const { getLastChatInstanceRole, getLastNChatMessages } = NoxLib.ChatLogManipulation.ChatInfo;
-
-const { shorthandStringResolver, shorthandIntResolver } = NoxLib.MacroCoercionAndShorthand.VarShorthand;
-
 /**
- * @typedef {[isUser: Boolean, isSystem: Boolean]} RoleTuple
- *
- * @typedef {Object} RoleEnum
- * @property {RoleTuple} user
- * @property {RoleTuple} system
- * @property {RoleTuple} assistant
+ * @import {} from '../../../global'
  */
 
-
-/**
- * @type {RoleEnum}
- */
-const ROLETUPLE = {
-    "user":         [true,  false],
-    "system":       [false, true],
-    "assistant":    [false, false],
-}
-
-export async function initChatLogMacros() {
+export async function initChatHistory() {
     macros.register(
         'lastMsgByRole',
         {
@@ -48,22 +31,7 @@ export async function initChatLogMacros() {
                 '{{lastMsgByRole::.localVar}}',
                 '{{lastMsgByRole::$globalVar}}',
             ],
-            "handler": ({unnamedArgs: [roleRaw], resolve}) => {
-                roleRaw = shorthandStringResolver(roleRaw, resolve);
-
-                const
-                    role = ['system', 'assistant'].includes(roleRaw)
-                        ? roleRaw === 'system'
-                            ? ROLETUPLE.system
-                            : ROLETUPLE.assistant
-                        : ROLETUPLE.user;
-
-                const msg = getLastChatInstanceRole(role)?.mes;
-
-                return msg !== undefined
-                    ? msg
-                    : '';
-            }
+            "handler": handlerLastMsgByRole
         }
     );
 
@@ -90,13 +58,7 @@ export async function initChatLogMacros() {
                 '{{lastNMessages::.localVar}}',
                 '{{lastNMessages::$globalVar}}',
             ],
-            "handler": ({unnamedArgs: [nRaw], resolve}) => {
-                const
-                    n = shorthandIntResolver(nRaw, resolve),
-                    msgs = getLastNChatMessages(n);
-
-                return msgs.map(msg => msg.mes).join('\n\n');
-            }
+            "handler": handlerLastNMessages
         }
     );
 }
