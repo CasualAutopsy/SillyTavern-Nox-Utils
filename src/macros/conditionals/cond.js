@@ -12,7 +12,7 @@ const condData = NoxLib.MacroHandlers.ConditionalHandlers.GlobalConditionalData;
 /**
  * @import {} from '../../../global'
  *
- * @typedef {import('/scripts/extensions/third-party/STLibs-Nox-Library/lib/macro-helpers.js').CondTuple} CondTuple'
+ * @typedef {import('../../../../STLibs-Nox-Library/libs/macros/cond-handling.ts').CondTuple} CondTuple'
  */
 
 /**
@@ -29,7 +29,7 @@ export async function initConds() {
     macros.register(
         'condEq',
         {
-            "category": 'Nox Utils - Conditional Statments',
+            "category": 'Nox Utils - Conditional Statements',
             "unnamedArgs": [
                 {
                     "name": 'strict_types',
@@ -77,7 +77,7 @@ export async function initConds() {
     macros.register(
         'condNeq',
         {
-            "category": 'Nox Utils - Conditional Statments',
+            "category": 'Nox Utils - Conditional Statements',
             "unnamedArgs": [
                 {
                     "name": 'strict_types',
@@ -125,7 +125,7 @@ export async function initConds() {
     macros.register(
         'condGt',
         {
-            "category": 'Nox Utils - Conditional Statments',
+            "category": 'Nox Utils - Conditional Statements',
             "unnamedArgs": [
                 {
                     "name": 'left',
@@ -165,7 +165,7 @@ export async function initConds() {
     macros.register(
         'condGte',
         {
-            "category": 'Nox Utils - Conditional Statments',
+            "category": 'Nox Utils - Conditional Statements',
             "unnamedArgs": [
                 {
                     "name": 'left',
@@ -205,7 +205,7 @@ export async function initConds() {
     macros.register(
         'condLt',
         {
-            "category": 'Nox Utils - Conditional Statments',
+            "category": 'Nox Utils - Conditional Statements',
             "unnamedArgs": [
                 {
                     "name": 'left',
@@ -245,7 +245,7 @@ export async function initConds() {
     macros.register(
         'condLte',
         {
-            "category": 'Nox Utils - Conditional Statments',
+            "category": 'Nox Utils - Conditional Statements',
             "unnamedArgs": [
                 {
                     "name": 'left',
@@ -285,7 +285,7 @@ export async function initConds() {
     macros.register(
         'condIn',
         {
-            "category": 'Nox Utils - Conditional Statments',
+            "category": 'Nox Utils - Conditional Statements',
             "unnamedArgs": [
                 {
                     "name": 'left',
@@ -325,7 +325,7 @@ export async function initConds() {
     macros.register(
         'condNin',
         {
-            "category": 'Nox Utils - Conditional Statments',
+            "category": 'Nox Utils - Conditional Statements',
             "unnamedArgs": [
                 {
                     "name": 'left',

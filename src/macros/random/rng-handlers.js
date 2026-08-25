@@ -9,7 +9,7 @@ const argH = NoxLib.MacroHandlers.argHandler;
 
 
 /**
- * Psudo-integer dtype RNG macro handler.
+ * Pseudo-integer dtype RNG macro handler.
  *
  * @param {MacroExecutionContext} param0 - Macro context.
  * @returns {String} Stringified integer RNG result.

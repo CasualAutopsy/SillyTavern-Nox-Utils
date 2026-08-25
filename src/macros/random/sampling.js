@@ -22,13 +22,13 @@ export async function initSampling() {
                     "description": 'The number of elements to sample from the list.',
                 },
                 {
-                    "name": 'seperator',
+                    "name": 'separator',
                     "type": ['string'],
                     "sampleValue": ',, .localVar, $globalVar',
                     "description": 'The string to split the samples with.',
                 },
                 {
-                    "name": 'last_seperator',
+                    "name": 'last_separator',
                     "type": ['string'],
                     "sampleValue": ', and, .localVar, $globalVar',
                     "description": 'The string to split the last and second-to-last element with.',
@@ -40,7 +40,7 @@ export async function initSampling() {
             "description": 'Returns a random sample of n elements from the list and joins them with the split and last_split.',
             "returns": 'The randomly generated list.',
             "returnType": 'string',
-            // "displayOverride": '{{randList::n::seperator::last_seperator::item1::item2::...}}',
+            // "displayOverride": '{{randList::n::separator::last_separator::item1::item2::...}}',
             "handler": handlerListSampling
         }
     );
@@ -51,11 +51,11 @@ export async function initSampling() {
             "category": 'Nox Utils - Randomization',
             "unnamedArgs": [
                 {
-                    "name": 'seperator',
+                    "name": 'separator',
                     "type": ['string']
                 },
                 {
-                    "name": 'last_seperator',
+                    "name": 'last_separator',
                     "type": ['string']
                 },
             ],
@@ -65,7 +65,7 @@ export async function initSampling() {
             "description": 'Creates a list of items that each have a dropout probability.',
             "returns": 'The formatted list after dropout is applied.',
             "returnType": 'string',
-            // "displayOverride": "{{randDropOut::seperator::last_seperator::item1::dropout1::...}}",
+            // "displayOverride": "{{randDropOut::separator::last_separator::item1::dropout1::...}}",
             // "exampleUsage": [
             //     '{{randDropOut::,{{space}}::, and{{space}}::test item 1::0.5::test item 2::0.25::test item 3::0.75}}',
             // ],

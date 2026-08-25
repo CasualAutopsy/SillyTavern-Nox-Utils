@@ -12,7 +12,7 @@ const argH = NoxLib.MacroHandlers.argHandler;
  * @param {MacroExecutionContext} param0 - Macro context.
  * @returns {String}
  */
-function handlerRepeat({unnamedArgs: [resolveAfter, nRepeat, seperator, textContent], flags: {preserveWhitespace}, trimContent, resolve}) {
+function handlerRepeat({unnamedArgs: [resolveAfter, nRepeat, separator, textContent], flags: {preserveWhitespace}, trimContent, resolve}) {
     const
         doAfter = argH.stBoolCoercion(resolveAfter),
         doN = argH.parse(nRepeat, "int");
@@ -29,14 +29,14 @@ function handlerRepeat({unnamedArgs: [resolveAfter, nRepeat, seperator, textCont
     let text;
     if (doAfter) {
         text = argH.resolve(textContent);
-        text += (seperator + argH.resolve(textContent)).repeat(doN-1);
+        text += (separator + argH.resolve(textContent)).repeat(doN-1);
         text = resolve(text);
     }
 
     else {
-        seperator = resolve(seperator);
+        separator = resolve(separator);
         text = resolve(argH.resolve(textContent));
-        text += (seperator + text).repeat(doN-1);
+        text += (separator + text).repeat(doN-1);
     }
 
     return preserveWhitespace

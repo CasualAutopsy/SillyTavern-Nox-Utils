@@ -10,7 +10,7 @@ export async function initStringOps() {
     macros.register(
         'repeat',
         {
-            "category": 'Nox Utils - Repitition',
+            "category": 'Nox Utils - Repetition',
             "unnamedArgs": [
                 {
                     "name": 'resolve-after',
@@ -23,7 +23,7 @@ export async function initStringOps() {
                     "description": 'Number of times the text content should be repeated.',
                 },
                 {
-                    "name": 'seperator',
+                    "name": 'separator',
                     "optional": false,
                     "description": 'Text to inject between each repeat.'
                 },
