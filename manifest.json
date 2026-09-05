@@ -6,7 +6,7 @@
     ],
     "js": "dist/index.js",
     "author": "CasualAutopsy",
-    "version": "0.4.1-beta",
+    "version": "0.6.0-beta",
     "homePage": "https://github.com/CasualAutopsy/SillyTavern-Nox-Utils",
     "auto_update": false
 }

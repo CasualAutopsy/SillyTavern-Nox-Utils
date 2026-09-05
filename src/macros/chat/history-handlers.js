@@ -1,5 +1,5 @@
 // @ts-check
-const { getLastChatInstanceRole, getLastNChatMessages } = NoxLib.ChatLogManipulation.ChatInfo;
+const { chatLastRoleInstance, chatLastNMessages } = NoxLib.ChatMessageMethods.ChatRetrieval;
 
 const argH = NoxLib.MacroHandlers.argHandler;
 
@@ -41,7 +41,7 @@ function handlerLastMsgByRole({unnamedArgs: [role]}) {
             : ROLETUPLE.assistant
         : ROLETUPLE.user;
 
-    const msg = getLastChatInstanceRole(role_tuple)?.mes;
+    const msg = chatLastRoleInstance(role_tuple)?.mes;
 
     return msg !== undefined
         ? msg
@@ -54,7 +54,7 @@ function handlerLastMsgByRole({unnamedArgs: [role]}) {
  * @returns {String}
  */
 function handlerLastNMessages({unnamedArgs: [n]}) {
-    const msgs = getLastNChatMessages(
+    const msgs = chatLastNMessages(
         argH.parse(n, "int")
     );
 

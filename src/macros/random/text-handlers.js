@@ -1,8 +1,8 @@
-import Chance from 'chance';
+import { WordChance } from '../../modules/chance/chance.js';
 
 const argH = NoxLib.MacroHandlers.argHandler;
 
-const chance = new Chance(Math.random);
+const chance = new WordChance(Math.random);
 
 
 
@@ -29,11 +29,11 @@ function handlerWord({unnamedArgs: [rawN, byLength, rawCapitalize]}) {
             : argH.parse(rawN, "int");
 
     if (n == null) {
-        return chance.word({capitalize: wordCase});
+        return chance.randWord({capitalize: wordCase});
     } else {
         return argH.stBoolCoercion(byLength)
-            ? chance.word({length: n, capitalize: wordCase})
-            : chance.word({syllables: n, capitalize: wordCase});
+            ? chance.randWord({length: n, capitalize: wordCase})
+            : chance.randWord({syllables: n, capitalize: wordCase});
     }
 }
 
@@ -53,9 +53,9 @@ function handlerSentence({unnamedArgs: [rawN, rawPunctuation]}) {
             : argH.parse(rawN, "int");
 
     if (n === null) {
-        return chance.sentence({punctuation: punct});
+        return chance.randSentence({punctuation: punct});
     } else {
-        return chance.sentence({words: n, punctuation: punct});
+        return chance.randSentence({words: n, punctuation: punct});
     }
 }
 
@@ -71,9 +71,9 @@ function handlerParagraph({unnamedArgs: [rawN]}) {
         : argH.parse(rawN, "int");
 
     if (n == null) {
-        return chance.paragraph();
+        return chance.randParagraph();
     } else {
-        return chance.paragraph({sentences: n});
+        return chance.randParagraph({sentences: n});
     }
 }
 

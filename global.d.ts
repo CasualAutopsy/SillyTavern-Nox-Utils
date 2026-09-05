@@ -1,2 +1,2 @@
 import '../../../../global';
-import '../STLibs-Nox-Library/noxlib';
+import '../STLibs-Nox-Library/global';

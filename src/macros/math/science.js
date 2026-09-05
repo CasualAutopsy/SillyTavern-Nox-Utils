@@ -9,10 +9,9 @@ import {
 const { macros } = SillyTavern.getContext();
 
 /**
- * @import {} from '../../../global'
+ * @import {} from '../../../globals'
  */
 
-Math.cbrt
 
 /**
  * Initialize the math ops macros
