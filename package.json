@@ -1,7 +1,7 @@
 {
   "name": "extension-template",
   "type": "module",
-  "version": "0.6.2-beta",
+  "version": "0.6.3-beta",
   "private": true,
   "scripts": {
     "build": "webpack --mode production",

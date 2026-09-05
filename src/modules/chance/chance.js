@@ -47,7 +47,7 @@ export class Chance {
      * @returns
      */
     n(fn, n) {
-        testRange(
+        this.testRange(
             typeof fn !== "function",
             "[Nox-Utils]: The first argument must be a function."
         );
@@ -103,22 +103,22 @@ export class Chance {
      * @returns
      */
     randNatural(opt) {
-        opt = initOptions(opt, {min: 0, max: MAX_INT});
+        opt = this.initOptions(opt, {min: 0, max: MAX_INT});
 
-        testRange(opt.min < 0, "[Nox-Utils]: Min cannot be less than zero.");
+        this.testRange(opt.min < 0, "[Nox-Utils]: Min cannot be less than zero.");
 
         if (typeof opt.numerals === 'number'){
-          testRange(opt.numerals < 1, "[Nox-Utils]: Numerals cannot be less than one.");
+          this.testRange(opt.numerals < 1, "[Nox-Utils]: Numerals cannot be less than one.");
 
           opt.min = Math.pow(10, opt.numerals - 1);
           opt.max = Math.pow(10, opt.numerals) - 1;
         }
 
         if (opt.exclude) {
-            testRange(!Array.isArray(opt.exclude), "[Nox-Utils]: exclude must be an array.");
+            this.testRange(!Array.isArray(opt.exclude), "[Nox-Utils]: exclude must be an array.");
 
             for (let exclusionIndex in opt.exclude) {
-                testRange(!Number.isInteger(opt.exclude[exclusionIndex]), "[Nox-Utils]: exclude must be numbers.");
+                this.testRange(!Number.isInteger(opt.exclude[exclusionIndex]), "[Nox-Utils]: exclude must be numbers.");
             }
 
             let random = opt.min + this.randNatural({max: opt.max - opt.min - opt.exclude.length});
@@ -152,7 +152,7 @@ export class Chance {
      * @returns
      */
     randChar(opt) {
-        opt = initOptions(opt);
+        opt = this.initOptions(opt);
 
         const symbols = "!@#$%^&*()[]";
         let letters, pool;
@@ -212,7 +212,7 @@ export class WordChance extends Chance {
      * @returns
      */
     randSyllable(opt) {
-        opt = initOptions(opt);
+        opt = this.initOptions(opt);
 
         const length = opt.length || this.randNatural({min: 2, max: 3}),
             consonants = 'bcdfghjklmnprstvwz', // consonants except hard to speak ones
@@ -258,9 +258,9 @@ export class WordChance extends Chance {
      * @param {WordOpt} opt
      */
     randWord(opt) {
-        opt = initOptions(opt);
+        opt = this.initOptions(opt);
 
-        testRange(
+        this.testRange(
             opt.syllables && opt.length,
             "[Nox-Utils]: Cannot specify both syllables AND length."
         );
@@ -299,7 +299,7 @@ export class WordChance extends Chance {
      * @returns
      */
     randSentence(opt) {
-        opt = initOptions(opt);
+        opt = this.initOptions(opt);
 
         const words = opt.words || this.randNatural({min: 12, max: 18}),
             punctuation = opt.punctuation,
@@ -337,7 +337,7 @@ export class WordChance extends Chance {
      * @returns
      */
     randParagraph(opt) {
-        opt = initOptions(opt);
+        opt = this.initOptions(opt);
 
         const sentences = opt.sentences || this.randNatural({min: 3, max: 7}),
             sentence_array = this.n(this.randSentence, sentences),

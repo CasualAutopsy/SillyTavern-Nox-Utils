@@ -14,11 +14,11 @@ Nox's personal assortment of helpful macros ~~and STscript slash commands~~(Soon
 3. Paste the following URL into the text box: `https://github.com/CasualAutopsy/SillyTavern-Nox-Utils`
 4. Click `Install just for me`. (If you'te looking to modify the extension in any when, then it's recommend to click `Install for all users` instead.)
 
-## Useage
+## Usage
 
 ### Macros
 
-To see the list of available macros, type `/? macros` into the send textare and hit enter.
-When the macro list appears, look for the catagories with the prefix `Nox Utils`.
+To see the list of available macros, type `/? macros` into the send textarea and hit enter.
+When the macro list appears, look for the categories with the prefix `Nox Utils`.
 
 ### ~~Slash Commands~~(Soon™)
